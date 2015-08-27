@@ -15,22 +15,31 @@ class FlaskrTestCase(unittest.TestCase):
       print("teardown")
 
     def test_posting_trip(self):
-      response = self.app.post('/trip/1', 
+      response = self.app.post('/trip/', 
+        data=json.dumps(dict(
+          name="Stuttgart Roadtrip"
+        )), 
+        content_type = 'application/json')
+      
+      responseJSON = json.loads(response.data.decode())
+
+      assert 'application/json' in response.content_type
+      assert 'Stuttgart Roadtrip' in responseJSON["name"]
+
+    def test_getting_trip(self):
+      response = self.app.post('/trip/', 
         data=json.dumps(dict(
           name="Stuttgart Roadtrip"
         )), 
         content_type = 'application/json')
 
-      print(response.data.decode())
+      responseJSON = json.loads(response.data.decode())
+      postedObjectID = responseJSON["_id"]
 
-      assert 'Stuttgart Roadtrip' in response.data.decode()
+      response = self.app.get('/trip/'+postedObjectID)
+      responseJSON = json.loads(response.data.decode())
 
-    def test_getting_trip(self):
-      response = self.app.get('/trip/1')
-
-      print(response.data.decode())
-
-      assert 'Stuttgart Roadtrip' in response.data.decode()
+      assert 'Stuttgart Roadtrip' in responseJSON["name"]
 
 
 if __name__ == '__main__':
