@@ -8,6 +8,7 @@ class FlaskrTestCase(unittest.TestCase):
 
     def setUp(self):
       self.app = server.app.test_client()
+      server.app.config['TESTING'] = True
       print("setup")
 
     def tearDown(self):
