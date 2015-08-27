@@ -20,6 +20,8 @@ class FlaskrTestCase(unittest.TestCase):
         )), 
         content_type = 'application/json')
 
+      print(response.data.decode())
+
       assert 'Stuttgart Roadtrip' in response.data.decode()
 
     def test_getting_trip(self):
