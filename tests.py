@@ -3,16 +3,22 @@ import server
 import unittest
 import tempfile
 import json
+from pymongo import MongoClient
 
 class FlaskrTestCase(unittest.TestCase):
 
     def setUp(self):
       self.app = server.app.test_client()
+      # Run app in testing mode to retrieve exceptions and stack traces
       server.app.config['TESTING'] = True
-      print("setup")
 
-    def tearDown(self):
-      print("teardown")
+      # Inject test database into application
+      mongo = MongoClient('localhost', 27017)
+      db = mongo.test_database
+      server.app.db = db
+
+      # Drop collection (significantly faster than dropping entire db)
+      db.drop_collection('trips')
 
     def test_posting_trip(self):
       response = self.app.post('/trip/', 

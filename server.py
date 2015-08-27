@@ -7,23 +7,23 @@ from bson.objectid import ObjectId
 
 app = Flask(__name__)
 mongo = MongoClient('localhost', 27017)
-db = mongo.test_database
+app.db = mongo.develop_database
 api = Api(app)
 
 class Trip(Resource):
     def get(self, trip_id = None):
       if trip_id is None:
-        trip_collection = db.trips
+        trip_collection = app.db.trips
         trips = list(trip_collection.find())
         return trips
       else:
-        trip_collection = db.trips
+        trip_collection = app.db.trips
         trip = trip_collection.find_one({'_id': ObjectId(trip_id)})
         return trip
 
     def post(self):
       new_trip = request.json
-      trip_collection = db.trips
+      trip_collection = app.db.trips
       result = trip_collection.insert_one(request.json)
 
       trip = trip_collection.find_one(result.inserted_id)
