@@ -11,17 +11,22 @@ db = mongo.test_database
 api = Api(app)
 
 class Trip(Resource):
-    def get(self, trip_id):
-      trips = db.trips
-      trip = trips.find_one({'_id': ObjectId(trip_id)})
-      return trip
+    def get(self, trip_id = None):
+      if trip_id is None:
+        trip_collection = db.trips
+        trips = list(trip_collection.find())
+        return trips
+      else:
+        trip_collection = db.trips
+        trip = trip_collection.find_one({'_id': ObjectId(trip_id)})
+        return trip
 
     def post(self):
       new_trip = request.json
-      trips = db.trips
-      result = trips.insert_one(request.json)
+      trip_collection = db.trips
+      result = trip_collection.insert_one(request.json)
 
-      trip = trips.find_one(result.inserted_id)
+      trip = trip_collection.find_one(result.inserted_id)
 
       return trip
 
