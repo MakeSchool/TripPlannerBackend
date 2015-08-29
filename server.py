@@ -1,16 +1,35 @@
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, Response, jsonify
 from flask_restful import Resource, Api
 from pymongo import MongoClient
 import json
 from utils.mongo_json_encoder import JSONEncoder
 from bson.objectid import ObjectId
+from functools import wraps
 
 app = Flask(__name__)
 mongo = MongoClient('localhost', 27017)
 app.db = mongo.develop_database
 api = Api(app)
 
+def check_auth(username, password):
+    return username == 'admin' and password == 'secret'
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            message = {'message': "Basic Auth Required."}
+            resp = jsonify(message)
+            resp.status_code = 401
+
+            return resp
+        return f(*args, **kwargs)
+    return decorated
+
 class Trip(Resource):
+
+    @requires_auth
     def get(self, trip_id = None):
       if trip_id is None:
         trip_collection = app.db.trips
@@ -21,6 +40,7 @@ class Trip(Resource):
         trip = trip_collection.find_one({'_id': ObjectId(trip_id)})
         return trip
 
+    @requires_auth
     def post(self):
       new_trip = request.json
       trip_collection = app.db.trips
