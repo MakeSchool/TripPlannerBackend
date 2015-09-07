@@ -32,7 +32,7 @@ def requires_auth(f):
     def decorated(*args, **kwargs):
         auth = request.authorization
         if not auth or not check_auth(auth.username, auth.password):
-          message = {'error': "Basic Auth Required."}
+          message = {'error': 'Basic Auth Required.'}
           resp = jsonify(message)
           resp.status_code = 401
           return resp
@@ -43,24 +43,24 @@ def requires_auth(f):
 class User(Resource):
 
     def post(self):
-      if (request.json["username"] is None or request.json["password"] is None):
-        message = {'error':  "Request requires username and password"}
+      if (request.json['username'] is None or request.json['password'] is None):
+        message = {'error':  'Request requires username and password'}
         resp = jsonify(message)
         resp.status_code = 400
         return resp
 
       user_collection = app.db.users
-      user = user_collection.find_one({'username': request.json["username"]})
+      user = user_collection.find_one({'username': request.json['username']})
 
       if user is not None:
-        message = {'error': "Username already in use"}
+        message = {'error': 'Username already in use'}
         resp = jsonify(message)
         resp.status_code = 400
         return resp
       else:
-        encodedPassword = request.json["password"].encode('utf-8')
+        encodedPassword = request.json['password'].encode('utf-8')
         hashed = bcrypt.hashpw(encodedPassword, bcrypt.gensalt(app.bcrypt_rounds))
-        request.json["password"] = hashed
+        request.json['password'] = hashed
         user_collection.insert_one(request.json)
 
     @requires_auth

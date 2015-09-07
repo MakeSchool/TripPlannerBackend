@@ -14,7 +14,6 @@ class FlaskrTestCase(unittest.TestCase):
       self.app = server.app.test_client()
       # Run app in testing mode to retrieve exceptions and stack traces
       server.app.config['TESTING'] = True
-      server.app.config['TRAP_BAD_REQUEST_ERRORS'] = False
 
       # Inject test database into application
       mongo = MongoClient('localhost', 27017)
@@ -41,7 +40,7 @@ class FlaskrTestCase(unittest.TestCase):
 
     # User tests
 
-    def test_signup_is_possible_with_username_and_password(self):
+    def test_signup_with_username_and_password(self):
       response = self.app.post('/user/', 
         data = json.dumps(dict(
           username = "benjamin",
@@ -53,7 +52,7 @@ class FlaskrTestCase(unittest.TestCase):
 
       self.assertEqual(response.status_code, 200)
 
-    def test_verifying_credentials_possible(self):
+    def test_verifying_credentials(self):
       self.app.post('/user/', 
         data = json.dumps(dict(
           username = "benjamin",
@@ -67,6 +66,12 @@ class FlaskrTestCase(unittest.TestCase):
 
       self.assertEqual(response.status_code, 200)
 
+    def test_incorrect_credentials(self):
+      response = self.app.get('/user/', 
+        headers=self.generate_auth_header('wrongusername', 'andpassword')
+        )      
+
+      self.assertEqual(response.status_code, 401)
 
     # Trip tests
 
