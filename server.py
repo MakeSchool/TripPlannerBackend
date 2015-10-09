@@ -102,6 +102,16 @@ class Trip(Resource):
 
         return trip
 
+    @requires_auth
+    def delete(self, trip_id):
+        trip_collection = app.db.trips
+        trip_collection.delete_one(
+            {'_id': ObjectId(trip_id),
+             'user': request.authorization.username}
+        )
+
+        return {"tripIdentifier": trip_id}
+
 api.add_resource(Trip, '/trip/', '/trip/<string:trip_id>')
 api.add_resource(User, '/user/')
 

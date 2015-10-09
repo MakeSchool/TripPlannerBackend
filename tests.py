@@ -179,6 +179,25 @@ class FlaskrTestCase(unittest.TestCase):
         self.assertEqual(responseUser2.status_code, 200)
         self.assertEqual(len(responseUser2JSON), 1)
 
+    def test_deleting_trip_returns_trip_identifier(self):
+        response = self.app.post('/trip/',
+                                 headers=self.default_auth_header(),
+                                 data=json.dumps(dict(
+                                     name="Stuttgart Roadtrip"
+                                 )),
+                                 content_type='application/json')
+
+        postResponseJSON = json.loads(response.data.decode())
+        postedObjectID = postResponseJSON["_id"]
+
+        response = self.app.delete('/trip/' + postedObjectID,
+                                   headers=self.default_auth_header()
+                                   )
+        responseJSON = json.loads(response.data.decode())
+
+        self.assertEqual(response.status_code, 200)
+        assert postedObjectID in responseJSON["tripIdentifier"]
+
     def default_auth_header(self):
         return self.generate_auth_header("user", "password")
 
