@@ -212,7 +212,8 @@ class FlaskrTestCase(unittest.TestCase):
         response = self.app.put('/trip/' + postedObjectID,
                                 headers=self.default_auth_header(),
                                 data=json.dumps(dict(
-                                    name="San Francisco Roadtrip"
+                                    name="San Francisco Roadtrip",
+                                    _id=postedObjectID
                                 )),
                                 content_type='application/json')
         responseJSON = json.loads(response.data.decode())
