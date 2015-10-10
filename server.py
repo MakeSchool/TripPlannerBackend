@@ -103,6 +103,18 @@ class Trip(Resource):
         return trip
 
     @requires_auth
+    def put(self, trip_id):
+        new_trip = request.json
+        new_trip['user'] = request.authorization.username
+        trip_collection = app.db.trips
+        result = trip_collection.update_one({'_id': ObjectId(trip_id),
+                                             'user': request.authorization.username}, {'$set': request.json})
+
+        trip = trip_collection.find_one(ObjectId(trip_id))
+
+        return trip
+
+    @requires_auth
     def delete(self, trip_id):
         trip_collection = app.db.trips
         trip_collection.delete_one(

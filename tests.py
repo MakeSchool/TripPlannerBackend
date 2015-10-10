@@ -198,6 +198,28 @@ class FlaskrTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         assert postedObjectID in responseJSON["tripIdentifier"]
 
+    def test_updating_trip_returns(self):
+        response = self.app.post('/trip/',
+                                 headers=self.default_auth_header(),
+                                 data=json.dumps(dict(
+                                     name="Stuttgart Roadtrip"
+                                 )),
+                                 content_type='application/json')
+
+        postResponseJSON = json.loads(response.data.decode())
+        postedObjectID = postResponseJSON["_id"]
+
+        response = self.app.put('/trip/' + postedObjectID,
+                                headers=self.default_auth_header(),
+                                data=json.dumps(dict(
+                                    name="San Francisco Roadtrip"
+                                )),
+                                content_type='application/json')
+        responseJSON = json.loads(response.data.decode())
+
+        self.assertEqual(response.status_code, 200)
+        assert "San Francisco" in responseJSON["name"]
+
     def default_auth_header(self):
         return self.generate_auth_header("user", "password")
 
