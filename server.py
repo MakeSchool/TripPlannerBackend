@@ -89,7 +89,13 @@ class Trip(Resource):
                 {'_id': ObjectId(trip_id),
                  'user': request.authorization.username}
             )
-            return trip
+            if trip is None:
+                message = {'error': 'Trip not found.'}
+                resp = jsonify(message)
+                resp.status_code = 404
+                return resp
+            else:
+                return trip
 
     @requires_auth
     def post(self):

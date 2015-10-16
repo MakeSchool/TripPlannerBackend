@@ -190,13 +190,18 @@ class FlaskrTestCase(unittest.TestCase):
         postResponseJSON = json.loads(response.data.decode())
         postedObjectID = postResponseJSON["_id"]
 
-        response = self.app.delete('/trip/' + postedObjectID,
+        responseDelete = self.app.delete('/trip/' + postedObjectID,
                                    headers=self.default_auth_header()
                                    )
-        responseJSON = json.loads(response.data.decode())
+        responseJSON = json.loads(responseDelete.data.decode())
 
-        self.assertEqual(response.status_code, 200)
+        responseGet = self.app.get('/trip/' + postedObjectID,
+                                   headers=self.default_auth_header()
+                                   )
+
+        self.assertEqual(responseDelete.status_code, 200)
         assert postedObjectID in responseJSON["tripIdentifier"]
+        self.assertEqual(responseGet.status_code, 404)
 
     def test_updating_trip_returns(self):
         response = self.app.post('/trip/',
