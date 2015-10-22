@@ -1,5 +1,5 @@
 import bcrypt
-from flask import Flask, request, make_response, jsonify
+from flask import Flask, request, make_response
 from flask_restful import Resource, Api
 from pymongo import MongoClient
 from utils.mongo_json_encoder import JSONEncoder
@@ -22,7 +22,8 @@ def check_auth(username, password):
     else:
         # check if the hash we generate based on auth matches stored hash
         encodedPassword = password.encode('utf-8')
-        if bcrypt.hashpw(encodedPassword, user['password']) == user['password']:
+        if bcrypt.hashpw(encodedPassword,
+                         user['password']) == user['password']:
             return True
         else:
             return False
@@ -33,11 +34,7 @@ def requires_auth(f):
     def decorated(*args, **kwargs):
         auth = request.authorization
         if not auth or not check_auth(auth.username, auth.password):
-            message = {'error': 'Basic Auth Required.'}
-            resp = jsonify(message)
-            resp.status_code = 401
-            return resp
-
+            return ({'error': 'Basic Auth Required.'}, 401, None)
         return f(*args, **kwargs)
     return decorated
 
@@ -45,20 +42,17 @@ def requires_auth(f):
 class User(Resource):
 
     def post(self):
-        if (request.json['username'] is None or request.json['password'] is None):
-            message = {'error':  'Request requires username and password'}
-            resp = jsonify(message)
-            resp.status_code = 400
-            return resp
+        if (request.json['username'] is None
+                or request.json['password'] is None):
+                return ({'error':  'Request requires username and password'},
+                        400,
+                        None)
 
         user_collection = app.db.users
         user = user_collection.find_one({'username': request.json['username']})
 
         if user is not None:
-            message = {'error': 'Username already in use'}
-            resp = jsonify(message)
-            resp.status_code = 400
-            return resp
+            return ({'error': 'Username already in use'}, 400, None)
         else:
             encodedPassword = request.json['password'].encode('utf-8')
             hashed = bcrypt.hashpw(
@@ -68,10 +62,7 @@ class User(Resource):
 
     @requires_auth
     def get(self):
-        # if request handler is implemented, auth was successful
-        response = jsonify(data=[])
-        response.status_code = 200
-        return response
+        return (None, 200, None)
 
 
 class Trip(Resource):
@@ -87,13 +78,12 @@ class Trip(Resource):
             trip_collection = app.db.trips
             trip = trip_collection.find_one(
                 {'_id': ObjectId(trip_id),
-                 'user': request.authorization.username}
-            )
+                 'user': request.authorization.username})
+
             if trip is None:
-                message = {'error': 'Trip not found.'}
-                resp = jsonify(message)
-                resp.status_code = 404
-                return resp
+                # Flask allows us to return tuple in form
+                # (response, status, headers)
+                return (None, 404, None)
             else:
                 return trip
 
@@ -106,7 +96,7 @@ class Trip(Resource):
 
         trip = trip_collection.find_one(result.inserted_id)
 
-        return trip
+        return (trip, 201, None)
 
     @requires_auth
     def put(self, trip_id):
@@ -114,10 +104,12 @@ class Trip(Resource):
         new_trip['user'] = request.authorization.username
         trip_collection = app.db.trips
 
-        # remove _id since we can't update it and would need to transform it into an ObjectId
+        # remove _id since we can't update it and would need to
+        # transform it into an ObjectId
         del request.json['_id']
         trip_collection.update_one({'_id': ObjectId(trip_id),
-                                             'user': request.authorization.username}, {'$set': request.json})
+                                    'user': request.authorization.username},
+                                   {'$set': request.json})
         trip = trip_collection.find_one(ObjectId(trip_id))
 
         return trip
